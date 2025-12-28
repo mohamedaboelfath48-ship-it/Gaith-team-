@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gaith Team | Exam</title>
+
+<style>
+:root{
+  --primary:#0891b2;
+  --secondary:#06b6d4;
+  --bg:#ecfeff;
+  --card:#ffffff;
+  --border:#bae6fd;
+  --question:#cffafe;
+  --option:#f0f9ff;
+  --selected:#67e8f9;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --text:#0f172a;
+}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:"Segoe UI",Tahoma,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* HEADER */
+header{
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  color:#fff;
+  padding:22px;
+  text-align:center;
+}
+.logo{
+  font-size:28px;
+  font-weight:900;
+}
+.slogan{
+  margin-top:6px;
+  font-size:18px;
+  font-weight:800;
+}
+.timer{
+  margin-top:8px;
+  font-size:18px;
+  font-weight:700;
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+
+/* COUNTER */
+.counter-box{
+  background:#fff;
+  padding:16px;
+  border-radius:18px;
+  box-shadow:0 8px 22px rgba(0,0,0,.1);
+  margin-bottom:22px;
+  display:flex;
+  justify-content:space-between;
+  font-size:18px;
+  font-weight:800;
+}
+.done{color:var(--success)}
+.left{color:var(--danger)}
+
+/* CARD */
+.card{
+  background:var(--card);
+  padding:28px;
+  border-radius:22px;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+}
+
+/* QUESTION */
+.question-title{
+  background:var(--question);
+  padding:22px;
+  border-radius:18px;
+  font-size:22px;
+  font-weight:900;
+  margin-bottom:22px;
+  line-height:1.7;
+  border-left:6px solid var(--primary);
+}
+
+/* OPTIONS */
+.option{
+  background:var(--option);
+  border:2px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+  margin:14px 0;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+}
+.option:hover{background:#e0f2fe}
+.option.selected{
+  background:var(--selected);
+  border-color:var(--primary);
+}
+.option.disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* NAV */
+.nav{
+  display:flex;
+  gap:16px;
+  margin-top:24px;
+}
+.nav button{
+  flex:1;
+  padding:16px;
+  font-size:16px;
+  font-weight:800;
+  border:none;
+  border-radius:18px;
+}
+.prev{background:#e0f2fe}
+.next{background:var(--primary);color:#fff}
+.next:disabled{background:#7dd3fc}
+
+/* RESULT */
+.result{
+  background:#fff;
+  padding:32px;
+  border-radius:22px;
+  text-align:center;
+  font-size:22px;
+  margin-top:30px;
+}
+.good{color:var(--success);font-weight:900}
+.bad{color:var(--danger);font-weight:900}
+
+/* REPORT */
+.report-item{
+  background:#fff;
+  padding:18px;
+  border-radius:16px;
+  margin:14px 0;
+  border-left:6px solid var(--border);
+  font-size:16px;
+  line-height:1.6;
+}
+.report-item.correct{border-color:var(--success)}
+.report-item.wrong{border-color:var(--danger)}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">Gaith Team</div>
+  <div class="slogan">الإمتحان في جيبك</div>
+  <div class="timer" id="timer">30:00</div>
+</header>
+
+<div class="container">
+
+<div class="counter-box">
+  <div class="done">Answered: <span id="answered">0</span></div>
+  <div class="left">Remaining: <span id="remaining">0</span></div>
+</div>
+
+<div class="card" id="questionBox"></div>
+
+<div class="nav">
+  <button class="prev" onclick="prevQ()">Previous</button>
+  <button class="next" id="nextBtn" onclick="nextQ()" disabled>Next</button>
+</div>
+
+</div>
+
+<script>
+/* ===== QUESTIONS (ENGLISH) ===== */
+const questions = [
+{t:"Fertilization usually occurs in the ampulla of the fallopian tube.",a:true},
+{t:"Sperm capacitation is necessary for penetration of the ovum.",a:true},
+{t:"Implantation usually occurs in the lower uterine segment.",a:false},
+{t:"The blastocyst is responsible for implantation.",a:true},
+{t:"The placenta is fully formed by the end of the first trimester.",a:true},
+{t:"The umbilical cord normally contains two veins and one artery.",a:false},
+{t:"Wharton’s jelly protects the umbilical vessels.",a:true},
+{t:"Amniotic fluid allows fetal movements.",a:true},
+{t:"Oligohydramnios means excessive amniotic fluid.",a:false},
+{t:"Placenta previa causes painless vaginal bleeding.",a:true}
+];
+
+/* ===== STATE ===== */
+let i=0;
+let answers = Array(questions.length).fill(null);
+let time = 30*60;
+
+/* TIMER */
+setInterval(()=>{
+  let m=Math.floor(time/60), s=time%60;
+  timer.innerText=`${m}:${s<10?"0":""}${s}`;
+  time--;
+  if(time<0) finish();
+},1000);
+
+function updateCounter(){
+  const solved = answers.filter(a=>a!==null).length;
+  answered.innerText = solved;
+  remaining.innerText = questions.length - solved;
+}
+
+function showQ(){
+  let sel = answers[i];
+  nextBtn.disabled = sel===null;
+
+  questionBox.innerHTML = `
+    <div class="question-title">${questions[i].t}</div>
+    <div class="option ${sel===true?"selected":""} ${sel!==null?"disabled":""}" onclick="choose(true)">True</div>
+    <div class="option ${sel===false?"selected":""} ${sel!==null?"disabled":""}" onclick="choose(false)">False</div>
+  `;
+  updateCounter();
+}
+
+function choose(v){
+  if(answers[i]!==null) return;
+  answers[i]=v;
+  nextBtn.disabled=false;
+  showQ();
+}
+
+function nextQ(){
+  if(i<questions.length-1){
+    i++; showQ();
+  }else finish();
+}
+function prevQ(){
+  if(i>0){ i--; showQ(); }
+}
+
+function finish(){
+  let correct=0, report="";
+  questions.forEach((q,idx)=>{
+    let ok = answers[idx]===q.a;
+    if(ok) correct++;
+    report+=`
+      <div class="report-item ${ok?"correct":"wrong"}">
+        <b>Q${idx+1}:</b> ${q.t}<br>
+        Your answer: ${answers[idx]?"True":"False"}<br>
+        Correct answer: ${q.a?"True":"False"}
+      </div>`;
+  });
+  let wrong = questions.length - correct;
+  let percent = Math.round(correct/questions.length*100);
+
+  document.body.innerHTML = `
+    <header>
+      <div class="logo">Gaith Team</div>
+      <div class="slogan">الإمتحان في جيبك</div>
+    </header>
+    <div class="container">
+      <div class="result">
+        <p class="good">Correct answers: ${correct}</p>
+        <p class="bad">Wrong answers: ${wrong}</p>
+        <p>Score: ${percent}%</p>
+        <div style="margin-top:20px;font-size:22px;font-weight:900;color:#0891b2">
+          فخورين بيك وأشطر شطور 🌟
+        </div>
+      </div>
+      ${report}
+    </div>`;
+}
+
+showQ();
+</script>
+
+</body>
+</html>
